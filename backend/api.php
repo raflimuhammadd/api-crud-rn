@@ -1,29 +1,32 @@
 <?php
 
 // Menambahkan header untuk mengizinkan CORS
-header("Access-Control-Allow-Origin: *");  // Mengizinkan semua domain untuk mengakses resource ini
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");  // Metode HTTP yang diizinkan
-header("Access-Control-Allow-Headers: Content-Type");  // Menentukan header yang diizinkan
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+header("Access-Control-Allow-Headers: Content-Type");
 
 // Jika permintaan adalah preflight (OPTIONS request), langsung beri respons tanpa melanjutkan eksekusi
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-  http_response_code(200);  // Kode status untuk preflight request
+  http_response_code(200);
   exit();
 }
 
-
 error_reporting(0);
 
-$host = "localhost";
-$user = "root";
-$password = "Donat66";
-$db_name = "api_rn";
+// Memuat file .env dan mengonfigurasi variabel koneksi database
+$env = parse_ini_file('.env'); // Menggunakan parse_ini_file untuk membaca file .env
 
+// Mengambil nilai dari file .env
+$host = $env['DB_HOST'];
+$user = $env['DB_USER'];
+$password = $env['DB_PASSWORD'];
+$db_name = $env['DB_NAME'];
+
+// Membuat koneksi ke database menggunakan nilai dari .env
 $koneksi = mysqli_connect($host, $user, $password, $db_name);
 if (!$koneksi) {
     die("Koneksi gagal: " . mysqli_connect_error());
 }
-
 
 $op = $_GET['op'];
 switch ($op) {
@@ -47,11 +50,10 @@ switch ($op) {
     break;
 }
 
-
 function normal()
 {
   global $koneksi;
-  $sql1 = "select * from mahasiswa order by id desc";
+  $sql1 = "SELECT * FROM mahasiswa ORDER BY id DESC";
   $q1 = mysqli_query($koneksi, $sql1);
   while ($rl = mysqli_fetch_array($q1)) {
     $hasil[] = array(
@@ -67,11 +69,9 @@ function normal()
   echo json_encode($data);
 }
 
-function create() {
+function create()
+{
   global $koneksi;
-  
-  // Log untuk melihat data POST yang diterima
-  error_log("Data POST diterima: " . json_encode($_POST));
 
   $npm = $_POST['npm'];
   $nama = $_POST['nama'];
@@ -92,17 +92,14 @@ function create() {
   }
 
   $data['data']['result'] = $hasil;
-
-
   echo json_encode($data);
 }
-
 
 function detail()
 {
   global $koneksi;
   $id = $_GET['id'];
-  $sql1 = "select * from mahasiswa where id = '$id'";
+  $sql1 = "SELECT * FROM mahasiswa WHERE id = '$id'";
   $q1 = mysqli_query($koneksi, $sql1);
   while ($r1 = mysqli_fetch_array($q1)) {
     $hasil[] = array(
@@ -117,7 +114,6 @@ function detail()
   $data['data']['result'] = $hasil;
   echo json_encode($data);
 }
-
 
 function update()
 {
@@ -142,7 +138,7 @@ function update()
   }
   $hasil = "Gagal melakukan update data";
   if ($nama or $alamat or $npm or $program_studi) {
-    $sql1 = "update mahasiswa set " . implode(",", $set) . ",tanggal_input=now() where id = '$id'";
+    $sql1 = "UPDATE mahasiswa SET " . implode(",", $set) . ",tanggal_input=NOW() WHERE id = '$id'";
     $q1 = mysqli_query($koneksi, $sql1);
     if ($q1) {
       $hasil = "Data berhasil diupdate";
@@ -156,7 +152,7 @@ function delete()
 {
   global $koneksi;
   $id = $_GET['id'];
-  $sql1 = "delete from mahasiswa where id = '$id'";
+  $sql1 = "DELETE FROM mahasiswa WHERE id = '$id'";
   $q1 = mysqli_query($koneksi, $sql1);
   if ($q1) {
     $hasil = "Berhasil menghapus data";
